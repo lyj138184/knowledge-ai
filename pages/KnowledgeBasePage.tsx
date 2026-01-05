@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
 import { Header } from '../components/Header';
 
+interface FileItem {
+  name: string;
+  size: string;
+  tag?: string;
+  type: string;
+  date: string;
+  status: string;
+  icon: string;
+  color: string;
+  tagIcon?: string;
+  starred?: boolean;
+  highlight?: string;
+  // Preview related fields
+  category: 'pdf' | 'image' | 'text' | 'word' | 'csv';
+  url?: string;
+  content?: string;
+}
+
 export const KnowledgeBasePage: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
 
   const toggleSelection = (index: number) => {
     if (selectedItems.includes(index)) {
@@ -12,7 +31,7 @@ export const KnowledgeBasePage: React.FC = () => {
     }
   };
 
-  const files = [
+  const files: FileItem[] = [
     { 
       name: '2023_Q3_财务报告.pdf', 
       size: '2.4 MB', 
@@ -22,7 +41,9 @@ export const KnowledgeBasePage: React.FC = () => {
       status: 'ready', 
       icon: 'picture_as_pdf', 
       color: 'text-red-500 bg-red-50 border-red-100',
-      tagIcon: 'sell'
+      tagIcon: 'sell',
+      category: 'pdf',
+      url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
     },
     { 
       name: '产品路线图_v2.docx', 
@@ -32,7 +53,8 @@ export const KnowledgeBasePage: React.FC = () => {
       status: 'indexing', 
       icon: 'description', 
       color: 'text-blue-500 bg-blue-50 border-blue-100',
-      tagIcon: ''
+      tagIcon: '',
+      category: 'word'
     },
     { 
       name: '系统架构_v1.png', 
@@ -45,7 +67,9 @@ export const KnowledgeBasePage: React.FC = () => {
       color: 'text-purple-500 bg-purple-50 border-purple-100',
       tagIcon: 'sell',
       starred: true,
-      highlight: 'bg-amber-50/30'
+      highlight: 'bg-amber-50/30',
+      category: 'image',
+      url: 'https://picsum.photos/id/48/1200/800'
     },
     { 
       name: '旧版_API_接口规范.txt', 
@@ -55,7 +79,24 @@ export const KnowledgeBasePage: React.FC = () => {
       status: 'failed', 
       icon: 'article', 
       color: 'text-slate-500 bg-slate-100 border-slate-200',
-      tagIcon: ''
+      tagIcon: '',
+      category: 'text',
+      content: `API Version: 1.0.2
+Last Updated: 2023-09-15
+
+Authentication:
+All API requests must include a Bearer Token in the Authorization header.
+
+Endpoints:
+GET /api/v1/users
+  - Returns a list of users.
+  - Parameters: page (int), limit (int)
+
+POST /api/v1/users
+  - Creates a new user.
+  - Body: { "username": string, "email": string }
+
+... [Truncated]`
     },
     { 
       name: '客户数据导出_2023.csv', 
@@ -66,9 +107,85 @@ export const KnowledgeBasePage: React.FC = () => {
       status: 'ready', 
       icon: 'table_chart', 
       color: 'text-green-600 bg-green-50 border-green-100',
-      tagIcon: 'sell'
+      tagIcon: 'sell',
+      category: 'csv',
+      content: `ID,Name,Email,Company,Status
+1,John Doe,john@example.com,Tech Corp,Active
+2,Jane Smith,jane@sample.net,Design Studio,Inactive
+3,Bob Johnson,bob@enterprise.org,Biz Solutions,Active
+4,Alice Williams,alice@tech.io,Startup Inc,Active
+5,Charlie Brown,charlie@web.net,Web Services,Pending`
     },
   ];
+
+  const handlePreview = (file: FileItem) => {
+    if (file.status !== 'failed') {
+      setPreviewFile(file);
+    }
+  };
+
+  const renderPreviewContent = (file: FileItem) => {
+    switch (file.category) {
+      case 'image':
+        return (
+          <div className="flex items-center justify-center h-full w-full bg-gray-100 dark:bg-black/20 p-4">
+            <img src={file.url} alt={file.name} className="max-h-full max-w-full rounded shadow-lg object-contain" />
+          </div>
+        );
+      case 'pdf':
+        return (
+          <iframe src={file.url} className="w-full h-full" title="PDF Preview"></iframe>
+        );
+      case 'text':
+        return (
+          <div className="p-8 h-full overflow-y-auto bg-white dark:bg-surface-dark font-mono text-sm text-text-main dark:text-gray-300 whitespace-pre-wrap">
+            {file.content}
+          </div>
+        );
+      case 'csv':
+        const rows = file.content?.split('\n') || [];
+        const headers = rows[0]?.split(',') || [];
+        const data = rows.slice(1).map(row => row.split(','));
+        return (
+          <div className="p-8 h-full overflow-auto bg-white dark:bg-surface-dark">
+             <table className="w-full text-left border-collapse">
+               <thead>
+                 <tr>
+                   {headers.map((h, i) => (
+                     <th key={i} className="border-b border-border-light dark:border-border-dark py-2 px-4 bg-background-light dark:bg-white/5 font-bold text-xs text-text-secondary uppercase">{h}</th>
+                   ))}
+                 </tr>
+               </thead>
+               <tbody>
+                 {data.map((row, i) => (
+                   <tr key={i} className="hover:bg-background-light dark:hover:bg-white/5">
+                     {row.map((cell, j) => (
+                       <td key={j} className="border-b border-border-light dark:border-border-dark py-2 px-4 text-sm text-text-main dark:text-gray-300">{cell}</td>
+                     ))}
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary dark:text-gray-400 gap-4">
+             <div className="size-20 rounded-full bg-background-light dark:bg-white/5 flex items-center justify-center">
+               <span className="material-symbols-outlined text-[40px] opacity-50">visibility_off</span>
+             </div>
+             <div className="text-center">
+               <p className="text-lg font-medium text-text-main dark:text-white">无法预览此文件</p>
+               <p className="text-sm mt-1">此文件格式 ({file.category}) 暂不支持在线预览，请下载后查看。</p>
+             </div>
+             <button className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-sm font-bold flex items-center gap-2">
+               <span className="material-symbols-outlined text-[18px]">download</span>
+               下载文件
+             </button>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-background-light dark:bg-background-dark overflow-hidden font-display">
@@ -168,7 +285,7 @@ export const KnowledgeBasePage: React.FC = () => {
         </nav>
 
         {/* Main Content Area */}
-        <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0 bg-surface-light shadow-sm m-0 md:m-2 md:rounded-tl-2xl border-l border-t border-border-light dark:bg-surface-dark dark:border-border-dark">
+        <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0 bg-surface-light shadow-sm m-0 md:m-2 md:rounded-tl-2xl border-l border-t border-border-light dark:bg-surface-dark dark:border-border-dark relative">
           {/* Main Header */}
           <div className="px-6 py-5 border-b border-border-light flex flex-col gap-4 dark:border-border-dark">
             <div className="flex items-center text-sm text-text-secondary dark:text-gray-400">
@@ -259,7 +376,7 @@ export const KnowledgeBasePage: React.FC = () => {
                              </div>
                              <div>
                                 <div className="flex items-center gap-2">
-                                  <p className="text-sm font-medium text-text-main group-hover:text-primary cursor-pointer dark:text-white">{file.name}</p>
+                                  <p className="text-sm font-medium text-text-main group-hover:text-primary cursor-pointer dark:text-white" onClick={() => handlePreview(file)}>{file.name}</p>
                                   {file.starred && <span className="material-symbols-outlined text-[14px] text-amber-400 fill-current">star</span>}
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
@@ -304,7 +421,7 @@ export const KnowledgeBasePage: React.FC = () => {
                                 </button>
                              ) : (
                                 <>
-                                  <button className="p-1.5 text-text-secondary hover:text-primary rounded-full hover:bg-blue-50 transition-colors dark:text-gray-400 dark:hover:bg-white/10" title="查看">
+                                  <button className="p-1.5 text-text-secondary hover:text-primary rounded-full hover:bg-blue-50 transition-colors dark:text-gray-400 dark:hover:bg-white/10" title="查看" onClick={() => handlePreview(file)}>
                                      <span className="material-symbols-outlined text-[18px]">visibility</span>
                                   </button>
                                   <button className="p-1.5 text-text-secondary hover:text-primary rounded-full hover:bg-blue-50 transition-colors dark:text-gray-400 dark:hover:bg-white/10" title="编辑元数据">
@@ -337,6 +454,40 @@ export const KnowledgeBasePage: React.FC = () => {
                 <button className="p-1 rounded hover:bg-background-light text-text-main dark:hover:bg-white/10 dark:text-white"><span className="material-symbols-outlined text-[20px]">chevron_right</span></button>
              </div>
           </div>
+
+          {/* Preview Modal */}
+          {previewFile && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8 animate-in fade-in duration-200" onClick={() => setPreviewFile(null)}>
+              <div className="bg-surface-light dark:bg-surface-dark w-full max-w-6xl h-full md:h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-border-light dark:border-border-dark" onClick={e => e.stopPropagation()}>
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark">
+                  <div className="flex items-center gap-3">
+                    <div className={`size-8 rounded flex items-center justify-center border ${previewFile.color}`}>
+                      <span className="material-symbols-outlined text-[20px]">{previewFile.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-text-main dark:text-white line-clamp-1">{previewFile.name}</h3>
+                      <p className="text-xs text-text-secondary dark:text-gray-400">{previewFile.size} • {previewFile.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-light hover:bg-background-light text-sm font-medium text-text-main dark:border-border-dark dark:text-white dark:hover:bg-white/5 transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">download</span>
+                      <span className="hidden sm:inline">下载</span>
+                    </button>
+                    <button className="p-1.5 rounded-lg hover:bg-background-light text-text-secondary hover:text-text-main dark:hover:bg-white/5 dark:text-gray-400 dark:hover:text-white transition-colors" onClick={() => setPreviewFile(null)}>
+                      <span className="material-symbols-outlined text-[24px]">close</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Modal Content */}
+                <div className="flex-1 bg-gray-50 dark:bg-black/40 relative overflow-hidden flex items-center justify-center">
+                   {renderPreviewContent(previewFile)}
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
