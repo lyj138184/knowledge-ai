@@ -53,15 +53,24 @@ export const GlobalSidebar: React.FC<GlobalSidebarProps> = ({ activePage, onNavi
         </nav>
 
         <div className="flex flex-col gap-4 mt-auto">
-          <div className="flex items-center gap-3 border-t border-border-light pt-4 dark:border-border-dark">
-            <div
-              className="size-10 rounded-full bg-cover bg-center"
-              style={{ backgroundImage: "url('https://picsum.photos/200/200')" }}
-            ></div>
-            <div className="flex flex-col">
-              <p className="text-sm font-bold text-text-main dark:text-white">Alex Morgan</p>
-              <p className="text-xs text-text-secondary dark:text-gray-400">个人专业版</p>
+          <div className="flex items-center justify-between gap-2 border-t border-border-light pt-4 dark:border-border-dark">
+            <div className="flex items-center gap-3">
+              <div
+                className="size-10 rounded-full bg-cover bg-center"
+                style={{ backgroundImage: "url('https://picsum.photos/200/200')" }}
+              ></div>
+              <div className="flex flex-col">
+                <p className="text-sm font-bold text-text-main dark:text-white">Alex Morgan</p>
+                <p className="text-xs text-text-secondary dark:text-gray-400">个人专业版</p>
+              </div>
             </div>
+            <button 
+              onClick={() => onNavigate(Page.LOGIN)}
+              className="text-text-secondary hover:text-primary dark:text-gray-400 dark:hover:text-white transition-colors p-1 rounded" 
+              title="退出登录"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+            </button>
           </div>
         </div>
       </div>

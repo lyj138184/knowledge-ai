@@ -8,7 +8,9 @@ export enum Page {
   CHAT = 'CHAT',
   INTEGRATIONS = 'INTEGRATIONS',
   AGENT_MANAGEMENT = 'AGENT_MANAGEMENT',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  LOGIN = 'LOGIN',
+  REGISTER = 'REGISTER'
 }
 
 export interface User {

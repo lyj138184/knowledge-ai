@@ -10,6 +10,8 @@ import { RagLabPage } from './pages/RagLabPage';
 import { AgentManagementPage } from './pages/AgentManagementPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { Page } from './types';
 
 const App: React.FC = () => {
@@ -37,14 +39,20 @@ const App: React.FC = () => {
         return <IntegrationsPage />;
       case Page.SETTINGS:
         return <SettingsPage />;
+      case Page.LOGIN:
+        return <LoginPage onNavigate={setActivePage} />;
+      case Page.REGISTER:
+        return <RegisterPage onNavigate={setActivePage} />;
       default:
         return <DashboardPage />;
     }
   };
 
+  const isAuthPage = activePage === Page.LOGIN || activePage === Page.REGISTER;
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-background-light dark:bg-background-dark text-text-main">
-      <GlobalSidebar activePage={activePage} onNavigate={setActivePage} />
+      {!isAuthPage && <GlobalSidebar activePage={activePage} onNavigate={setActivePage} />}
       <main className="flex flex-1 flex-col overflow-hidden h-full min-w-0">
         {renderPage()}
       </main>

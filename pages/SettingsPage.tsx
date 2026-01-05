@@ -4,6 +4,7 @@ import { Header } from '../components/Header';
 const SECTIONS = [
   { id: 'account', label: '账户设置', icon: 'person' },
   { id: 'appearance', label: '外观设置', icon: 'palette' },
+  { id: 'billing', label: '成本中心', icon: 'payments' }, // New Section
   { id: 'kb', label: '知识库设置', icon: 'database' },
   { id: 'ai', label: 'AI 模型与能力', icon: 'psychology' },
   { id: 'integrations', label: '数据源集成', icon: 'hub' },
@@ -50,6 +51,29 @@ export const SettingsPage: React.FC = () => {
     fontSize: 50,
     language: 'zh-CN'
   });
+
+  // Billing & Cost Center State
+  const [billing, setBilling] = useState({
+    budget: 50.00,
+    alertThreshold: 80, // percentage
+    enableAlerts: true,
+    currency: 'USD'
+  });
+
+  // Mock Usage Data
+  const usageStats = {
+    currentMonthCost: 12.45,
+    projectedCost: 18.20,
+    totalTokens: 1245000,
+    lastMonthCost: 15.30,
+    breakdown: [
+      { id: 1, name: '科研助手 (GPT-4o)', tokens: '450k', type: 'Agent', cost: 8.50, trend: 'up' },
+      { id: 2, name: '智能问答 (GPT-3.5)', tokens: '680k', type: 'Chat', cost: 1.20, trend: 'stable' },
+      { id: 3, name: '知识库索引 (Embedding)', tokens: '115k', type: 'System', cost: 0.45, trend: 'down' },
+      { id: 4, name: '代码审查员 (Claude 3.5)', tokens: '0', type: 'Agent', cost: 0.00, trend: 'stable' },
+      { id: 5, name: '多语言翻译 (Gemini Pro)', tokens: '50k', type: 'Agent', cost: 2.30, trend: 'up' },
+    ]
+  };
 
   // Knowledge Base
   const [kbSettings, setKbSettings] = useState({
@@ -250,6 +274,14 @@ export const SettingsPage: React.FC = () => {
     return provider ? provider.models : [];
   };
 
+  // Helper for Cost Center progress bar color
+  const getBudgetColor = (spent: number, total: number) => {
+    const percentage = (spent / total) * 100;
+    if (percentage > 90) return 'bg-red-500';
+    if (percentage > 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
   return (
     <div className="flex flex-col h-full bg-background-light dark:bg-background-dark overflow-hidden font-display">
       <Header breadcrumbs={['设置']} showSearch={false} />
@@ -446,6 +478,150 @@ export const SettingsPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+            
+            {/* Cost Center / Billing Settings */}
+            <section id="billing" className="scroll-mt-6 rounded-xl border border-border-light bg-surface-light shadow-sm dark:border-border-dark dark:bg-surface-dark transition-all duration-300">
+               <div className="border-b border-border-light px-6 py-4 dark:border-border-dark flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-green-500">payments</span>
+                  <h3 className="font-display text-lg font-bold text-text-main dark:text-white">成本中心</h3>
+                </div>
+                <span className="text-xs font-medium text-text-secondary dark:text-gray-400">计费周期: 每月 1 号</span>
+              </div>
+              <div className="p-6 flex flex-col gap-8">
+                 {/* Overview Cards */}
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="rounded-xl bg-background-light p-4 dark:bg-background-dark border border-border-light dark:border-border-dark">
+                       <p className="text-xs font-medium text-text-secondary dark:text-gray-400 mb-1">本月累计消费</p>
+                       <div className="flex items-end gap-2">
+                          <span className="text-2xl font-bold text-text-main dark:text-white">${usageStats.currentMonthCost.toFixed(2)}</span>
+                          <span className="text-xs text-text-secondary dark:text-gray-500 mb-1">/ ${billing.budget}</span>
+                       </div>
+                       <div className="mt-3 h-1.5 w-full bg-gray-200 rounded-full dark:bg-gray-700 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full ${getBudgetColor(usageStats.currentMonthCost, billing.budget)}`} 
+                            style={{ width: `${Math.min((usageStats.currentMonthCost / billing.budget) * 100, 100)}%` }}
+                          ></div>
+                       </div>
+                    </div>
+                    <div className="rounded-xl bg-background-light p-4 dark:bg-background-dark border border-border-light dark:border-border-dark">
+                       <p className="text-xs font-medium text-text-secondary dark:text-gray-400 mb-1">预估本月总消费</p>
+                       <div className="flex items-end gap-2">
+                          <span className="text-2xl font-bold text-text-main dark:text-white">${usageStats.projectedCost.toFixed(2)}</span>
+                          <span className={`text-xs mb-1 font-medium ${usageStats.projectedCost > billing.budget ? 'text-red-500' : 'text-green-500'}`}>
+                             {usageStats.projectedCost > billing.budget ? '超支预警' : '预算内'}
+                          </span>
+                       </div>
+                       <p className="mt-2 text-[10px] text-text-secondary dark:text-gray-500">基于当前日均使用量测算</p>
+                    </div>
+                    <div className="rounded-xl bg-background-light p-4 dark:bg-background-dark border border-border-light dark:border-border-dark">
+                       <p className="text-xs font-medium text-text-secondary dark:text-gray-400 mb-1">Token 总消耗量</p>
+                       <div className="flex items-end gap-2">
+                          <span className="text-2xl font-bold text-text-main dark:text-white">{(usageStats.totalTokens / 1000000).toFixed(2)}M</span>
+                          <span className="text-xs text-text-secondary dark:text-gray-500 mb-1">Tokens</span>
+                       </div>
+                       <p className="mt-2 text-[10px] text-text-secondary dark:text-gray-500">较上月同期增长 12%</p>
+                    </div>
+                 </div>
+
+                 {/* Budget Controls */}
+                 <div>
+                    <h4 className="mb-4 text-sm font-bold text-text-main dark:text-white">预算控制与报警</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="space-y-4">
+                          <div>
+                            <label className="block text-xs font-medium text-text-secondary dark:text-gray-400 mb-1.5">月度预算金额 (USD)</label>
+                            <div className="relative">
+                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">$</span>
+                               <input 
+                                 type="number" 
+                                 className="w-full rounded-lg border-border-light bg-background-light pl-7 pr-3 py-2 text-sm text-text-main focus:border-primary focus:ring-primary dark:border-border-dark dark:bg-background-dark dark:text-white"
+                                 value={billing.budget}
+                                 onChange={(e) => setBilling({...billing, budget: parseFloat(e.target.value)})}
+                               />
+                            </div>
+                          </div>
+                          <div>
+                             <div className="flex justify-between mb-1.5">
+                                <label className="block text-xs font-medium text-text-secondary dark:text-gray-400">使用量报警阈值</label>
+                                <span className="text-xs font-bold text-primary">{billing.alertThreshold}%</span>
+                             </div>
+                             <input 
+                               type="range" 
+                               min="50" max="100" step="5"
+                               className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-border-light accent-primary dark:bg-border-dark" 
+                               value={billing.alertThreshold}
+                               onChange={(e) => setBilling({...billing, alertThreshold: parseInt(e.target.value)})}
+                             />
+                             <p className="mt-1 text-[10px] text-text-secondary dark:text-gray-500">当消费达到预算的 {billing.alertThreshold}% (${(billing.budget * billing.alertThreshold / 100).toFixed(2)}) 时触发报警。</p>
+                          </div>
+                       </div>
+                       <div className="flex flex-col justify-center gap-4 rounded-xl border border-dashed border-border-light bg-background-light/50 p-4 dark:border-border-dark dark:bg-white/5">
+                          <div className="flex items-center justify-between">
+                             <div>
+                                <p className="text-sm font-medium text-text-main dark:text-white">邮件报警通知</p>
+                                <p className="text-xs text-text-secondary dark:text-gray-400">发送至 {profile.email}</p>
+                             </div>
+                             <label className="relative inline-flex cursor-pointer items-center">
+                                <input 
+                                  className="peer sr-only" 
+                                  type="checkbox" 
+                                  checked={billing.enableAlerts}
+                                  onChange={(e) => setBilling({...billing, enableAlerts: e.target.checked})}
+                                />
+                                <div className="peer h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:bg-gray-700 dark:border-gray-600"></div>
+                             </label>
+                          </div>
+                          <div className="flex items-center justify-between">
+                             <div>
+                                <p className="text-sm font-medium text-text-main dark:text-white">自动熔断机制</p>
+                                <p className="text-xs text-text-secondary dark:text-gray-400">超预算时暂停 API 调用 (推荐)</p>
+                             </div>
+                             <label className="relative inline-flex cursor-pointer items-center">
+                                <input className="peer sr-only" type="checkbox" />
+                                <div className="peer h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 dark:bg-gray-700 dark:border-gray-600"></div>
+                             </label>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Usage Breakdown Table */}
+                 <div>
+                    <h4 className="mb-4 text-sm font-bold text-text-main dark:text-white">Token 消耗明细 (Top 5)</h4>
+                    <div className="overflow-hidden rounded-lg border border-border-light bg-background-light dark:border-border-dark dark:bg-background-dark">
+                       <table className="w-full text-left text-xs">
+                          <thead className="bg-surface-light text-text-secondary dark:bg-surface-dark dark:text-gray-400">
+                             <tr>
+                                <th className="px-4 py-3 font-medium">来源 / 任务</th>
+                                <th className="px-4 py-3 font-medium">类型</th>
+                                <th className="px-4 py-3 font-medium">Token 用量</th>
+                                <th className="px-4 py-3 font-medium">预估成本</th>
+                                <th className="px-4 py-3 font-medium text-right">趋势</th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border-light dark:divide-border-dark">
+                             {usageStats.breakdown.map((item) => (
+                                <tr key={item.id} className="group hover:bg-surface-light dark:hover:bg-white/5">
+                                   <td className="px-4 py-3 font-medium text-text-main dark:text-white">{item.name}</td>
+                                   <td className="px-4 py-3 text-text-secondary dark:text-gray-400">
+                                      <span className="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-600 dark:bg-white/10 dark:text-gray-300">{item.type}</span>
+                                   </td>
+                                   <td className="px-4 py-3 font-mono text-text-secondary dark:text-gray-400">{item.tokens}</td>
+                                   <td className="px-4 py-3 font-bold text-text-main dark:text-white">${item.cost.toFixed(2)}</td>
+                                   <td className="px-4 py-3 text-right">
+                                      {item.trend === 'up' && <span className="material-symbols-outlined text-[16px] text-red-500">trending_up</span>}
+                                      {item.trend === 'down' && <span className="material-symbols-outlined text-[16px] text-green-500">trending_down</span>}
+                                      {item.trend === 'stable' && <span className="material-symbols-outlined text-[16px] text-gray-400">trending_flat</span>}
+                                   </td>
+                                </tr>
+                             ))}
+                          </tbody>
+                       </table>
+                    </div>
+                 </div>
               </div>
             </section>
 
